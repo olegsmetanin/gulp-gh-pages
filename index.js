@@ -24,6 +24,7 @@ module.exports = function gulpGhPages(options) {
   var origin = options.origin || 'origin';
   var branch = options.branch || 'gh-pages';
   var message = options.message || 'Update ' + new Date().toISOString();
+  var update = options.update || false;
 
   var files = [];
   var TAG;
@@ -94,6 +95,10 @@ module.exports = function gulpGhPages(options) {
     .then(function(repo) {
       // remove all files
       return wrapPromise(function(resolve, reject) {
+        if (update) {
+          resolve(repo.status());
+          return;
+        }
         repo._repo.remove('.', {r: true}, function(err) {
           if (err) {
             reject(err);
