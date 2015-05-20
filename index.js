@@ -25,7 +25,7 @@ module.exports = function gulpGhPages(options) {
   var branch = options.branch || 'gh-pages';
   var message = options.message || 'Update ' + new Date().toISOString();
   var update = options.update || false;
-  var folder = options.folder;
+  var remoteFolder = options.remoteFolder;
 
   var files = [];
   var TAG;
@@ -100,7 +100,7 @@ module.exports = function gulpGhPages(options) {
           resolve(repo.status());
           return;
         }
-        repo._repo.remove(typeof (folder) === 'undefined' ? '.' : folder, {r: true}, function(err) {
+        repo._repo.remove(typeof (remoteFolder) === 'undefined' ? '.' : remoteFolder, {r: true}, function(err) {
           if (err) {
             reject(err);
             return;
