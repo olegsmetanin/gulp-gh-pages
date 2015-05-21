@@ -5,6 +5,7 @@ var gutil = require('gulp-util');
 var through = require('through2');
 var vinylFs = require('vinyl-fs');
 var wrapPromise = require('wrap-promise');
+var fs = require('fs');
 
 /*
  * Public: Push to gh-pages branch for github
@@ -24,8 +25,7 @@ module.exports = function gulpGhPages(options) {
   var origin = options.origin || 'origin';
   var branch = options.branch || 'gh-pages';
   var message = options.message || 'Update ' + new Date().toISOString();
-  var update = options.update || false;
-  var remoteFolder = options.remoteFolder;
+  var remoteFolders = options.remoteFolders;
 
   var files = [];
   var TAG;
@@ -96,17 +96,31 @@ module.exports = function gulpGhPages(options) {
     .then(function(repo) {
       // remove all files
       return wrapPromise(function(resolve, reject) {
-        if (update) {
-          resolve(repo.status());
-          return;
-        }
-        repo._repo.remove(typeof (remoteFolder) === 'undefined' ? '.' : remoteFolder, {r: true}, function(err) {
-          if (err) {
-            reject(err);
-            return;
+
+        function remove(folders, cb) {
+          if (folders.length === 0) {
+            cb();
+          } else {
+            var folder = folders.pop();
+            fs.exists(folder, function (exists) {
+              if (exists) {
+                repo._repo.remove(folder, {r: true}, function(err) {
+                  if (err) {
+                    reject(err);
+                    return;
+                  }
+                  remove(folders, cb);
+                });
+              } else {
+                remove(folders, cb);
+              }
+            })
           }
+        }
+
+        remove(typeof (remoteFolders) === 'undefined' ? ['.'] : remoteFolders, function() {
           resolve(repo.status());
-        });
+        })
       });
     })
     .then(function(repo) {
